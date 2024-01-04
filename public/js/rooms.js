@@ -28,3 +28,14 @@ class Boundary {
         c.fillRect(this.position.x,this.position.y, this.width, this.height)
     }
 }
+class Stops{
+    constructor({position,image}){
+        this.image=image
+        this.position= position
+        this.width= this.image.width
+        this.height= this.image.height
+    }
+    draw(x,y){
+        c.drawImage(this.image,this.position.x-x,this.position.y-y)
+    }
+}
