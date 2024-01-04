@@ -27,7 +27,7 @@ addEventListener('click', (event) => {
     }
     let angle =0
     angle = Math.atan2(event.clientY -playerposition.y+cameray , event.clientX -playerposition.x+camerax)
-    if(event.clientX >muteButtonwidth){ 
+    if(event.clientX >muteButtonwidth && inv.Hotbarid[mousewheelc]>0){ 
         socket.emit('shoot', {
         x: canvas.width/2+camerax+ (playerdownImage.width/4)/2,
         y:canvas.height/2+cameray+playerdownImage.height/2,
