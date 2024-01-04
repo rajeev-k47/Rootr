@@ -80,7 +80,9 @@ let Resistance= new Ability({
 //===============Inventory================//
 
 let inv = new inventory({
-    id:1
+    id:1,
+    number: 100,
+    Hotbarid: [20,20,20,20,20,20]
 
 })
 
@@ -110,6 +112,17 @@ const foreground = new Rooms({
 })
 
 //================================//
+const heal = new Stops({
+    image:Blink,
+    position:{x:442,y:205}
+
+})
+
+
+
+
+
+
 
 //===============================//
 const projectiles = {}
@@ -126,7 +139,6 @@ socket.on('updateprojectiles', (backendprojectiles)=>{
     for(const id in backendprojectiles){
     if(!players[socket.id]){return}
     const backendprojectile = backendprojectiles[id]
-    // if(players[socket.id].roomid==players[backendprojectile.playerID].roomid){
     if(!projectiles[id]){
         projectiles[id]=new Projectile({
            position:{ 
@@ -139,6 +151,7 @@ socket.on('updateprojectiles', (backendprojectiles)=>{
             shootplayerid: backendprojectile.playerID
 
         })
+        inv.Hotbarid[mousewheelc]--
         shotgun.play()
       }
     else{
@@ -146,7 +159,6 @@ socket.on('updateprojectiles', (backendprojectiles)=>{
         projectiles[id].position.y+=backendprojectile.velocity.y
         
      }
-    // }
     }
 
     for(const id in projectiles){
@@ -156,7 +168,6 @@ socket.on('updateprojectiles', (backendprojectiles)=>{
     }
 
 })
-
 socket.on('updatePlayer', (backendPlayers) => {
     for (const id in backendPlayers) {
         const backendPlayer = backendPlayers[id];
@@ -287,7 +298,9 @@ function animate() {
     cameray = players[socket.id].position.y - canvas.height/2}
 
     background.drawroom(camerax,cameray);
-    // c.drawImage(Blink,442-camerax,205-cameray,20,20)
+   if(players[socket.id]&&players[socket.id].roomid==1){
+    heal.draw(camerax,cameray)
+   }
 
 if(!players[socket.id]){return}
 
@@ -330,12 +343,10 @@ if(!players[socket.id]){return}
 
 
     
-    c.drawImage(Hotbar,10,60,80,400)
     inv.drawitems()
 //=================================================//
     Health.draw()
     Resistance.draw()
-
 
     // tocheck.forEach(boundary => {boundary.draw()}) 
     // doortocheck.forEach(boundary => {boundary.draw()}) //can be used to locate barrier blocks
@@ -351,7 +362,7 @@ for(let i=0 ;i <tocheck.length;i++){
            }
          }
        )
-    ){socket.emit('projectilecollision',id)}
+    ){socket.emit('projectilecollision',id);break}
 }}
 
 for(const id in players){
@@ -362,13 +373,23 @@ for(const id in players){
             rectangle1: projectiles[i]
              }
            )
-        ){console.log(id,projectiles[i].shootplayerid)
+        ){
             if(id!=projectiles[i].shootplayerid){
                 socket.emit('projectilecollisionwp',{id:id,pid:i})
             }
+            break
         }
     }
 }}
+
+
+if(rectangularcollision({
+    rectangle1:players[socket.id],
+    rectangle2:heal
+})){
+    socket.emit('stops',{id:"heal", playerid: socket.id})
+    
+}
 
 for(const id in players){
     for(let i =0 ; i<doortocheck.length; i++){
@@ -380,20 +401,19 @@ for(const id in players){
              }
            )
         ){
-            console.log(players[socket.id].roomid)
             if(players[socket.id].roomid==0){
-                console.log('hello')
-                players[socket.id].position.x=240
                 players[socket.id].roomid=1
+                players[socket.id].position.x=100
                 socket.emit('roomchange',players[socket.id].roomid)
+                break
             }
             else if(players[socket.id].roomid==1){
-                console.log('hello')
-                players[socket.id].position.x =canvas.width-130
                 players[socket.id].roomid=0
+                players[socket.id].position.x =1480
                  socket.emit('roomchange',players[socket.id].roomid)
+                 break
             }
-            console.log(players[socket.id].roomid)
+            
             
         }
     }
