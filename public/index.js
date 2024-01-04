@@ -81,7 +81,7 @@ let Resistance= new Ability({
 
 let inv = new inventory({
     id:1,
-    number: 100,
+    // number: 100,
     Hotbarid: [20,20,20,20,20,20]
 
 })
@@ -151,8 +151,9 @@ socket.on('updateprojectiles', (backendprojectiles)=>{
             shootplayerid: backendprojectile.playerID
 
         })
+        if(backendprojectile.playerID==socket.id){
         inv.Hotbarid[mousewheelc]--
-        shotgun.play()
+        shotgun.play()}
       }
     else{
         projectiles[id].position.x+=backendprojectile.velocity.x
@@ -396,14 +397,14 @@ for(const id in players){
         const doorboundary =  doortocheck[i]
         if(rectangularcollision({
             rectangle1: players[id],
-            rectangle2: {...doorboundary, position:{x:doorboundary.position.x ,y:doorboundary.position.y}
+            rectangle2: {...doorboundary, position:{x:doorboundary.position.x-3 ,y:doorboundary.position.y}
                }
              }
            )
         ){
             if(players[socket.id].roomid==0){
                 players[socket.id].roomid=1
-                players[socket.id].position.x=100
+                players[socket.id].position.x=120
                 socket.emit('roomchange',players[socket.id].roomid)
                 break
             }
