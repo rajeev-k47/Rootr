@@ -87,12 +87,11 @@ io.on('connection', (socket)=>{
         delete backendprojectiles[id]
     })
     socket.on('projectilecollisionwp',({id,pid})=>{
-        delete backendprojectiles[pid]
         players[id].xp-=10
         if(players[id].xp<=0){
             delete players[id]
-            players[socket.id].score++
         }
+        delete backendprojectiles[pid]
         io.emit('score--ofid',id)
         io.emit('updatePlayer',players)
 
@@ -101,6 +100,14 @@ io.on('connection', (socket)=>{
         players[socket.id].keys = keys
         io.emit('updatePlayer',players)
     })
+    socket.on('stops',({id,playerid})=>{
+        if(id=="heal"&& players[playerid].xp<=215){
+            players[playerid].xp+=0.2
+            
+        }
+        io.emit('score--ofid',playerid)
+    })
+
     socket.on('disconnect',(reason)=>{
         console.log(reason)
         delete players[socket.id]
