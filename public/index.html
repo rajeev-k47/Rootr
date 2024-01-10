@@ -89,7 +89,7 @@
 </div>
 
 <canvas></canvas>
-<div style="
+<div id="canvas" style="
     display: flex;
     align-items: center;
     justify-content: center;
@@ -98,19 +98,19 @@
     right: 0;
     bottom: 0;
     left: 0;
-    cursor: none;
   ">
     <form id="userform">
         <div>
-            <input id="userinput"
+            <input autofocus id="userinput"
                    type="text"
                    placeholder="Username"
                    style="
           padding: 12px;
           border-radius: 20px;
-          border: none;
+          border: 2px solid rgb(1, 10, 135);
           background: #ffffff;
           color: #000000;
+          outline: none;
         " required/>
         </div>
         <div style="text-align: center; margin-top: 8px">
