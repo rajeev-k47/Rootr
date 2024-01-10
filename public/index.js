@@ -24,10 +24,16 @@ const playerleftImage = new Image();playerleftImage.src = './img/Playersprite/pl
 const playerrightImage = new Image();playerrightImage.src = './img/Playersprite/playerRight.png'
 const Blink = new Image();Blink.src = './img/blink.png'
 const microphone = new Image();microphone.src = './img/Playersprite/microphone.png'
-const Bullets =new Image();Bullets.src='./img/Bullets.png'
+// const Bullets =new Image();Bullets.src='./img/Bullets.png'
+const Bullets =new Image();Bullets.src='./img/Bullat.png'
+
 const Hotbar =new Image();Hotbar.src='./img/Hotbar.png'
-const Bulletsforhotbar =new Image();Bulletsforhotbar.src='./img/Bulletscombine.png'
+// const Bulletsforhotbar =new Image();Bulletsforhotbar.src='./img/Bulletscombine.png'
+const Bulletsforhotbar =new Image();Bulletsforhotbar.src='./img/Bullet.png'
+
 const cursor = new Image(); cursor.src='./img/cursor.png'
+const bomb_animation = new Image(); bomb_animation.src='./img/explosion.png'
+const bomb_hotbar = new Image(); bomb_hotbar.src='./img/bomb.png'
 
 const healthbar1 =new Image();healthbar1.src='./img/Health/meter_bar_center-repeating_blue.png'
 const healthbar2 =new Image();healthbar2.src='./img/Health/meter_bar_holder_center-repeating_blue.png'
@@ -82,8 +88,7 @@ let Resistance= new Ability({
 
 let inv = new inventory({
     id:1,
-    // number: 100,
-    Hotbarid: [40,30,21,15,10,6]
+    Hotbarid: [40,30,21,15,10,6,100]
 
 })
 
@@ -103,6 +108,7 @@ const background = new Rooms({
 })
 const foreground = new Rooms({
     position: {
+
         x: offset.x,
         y: offset.y
     },
@@ -157,8 +163,8 @@ socket.on('updateprojectiles', (backendprojectiles)=>{
         shotgun.play()}
       }
     else{
-        projectiles[id].position.x+=backendprojectile.velocity.x
-        projectiles[id].position.y+=backendprojectile.velocity.y
+        projectiles[id].position.x=backendprojectile.x
+        projectiles[id].position.y=backendprojectile.y
         
      }
     }
@@ -253,6 +259,16 @@ socket.on('updatePlayer', (backendPlayers) => {
     }
 
 });
+socket.on('blast', ({lastx,lasty})=>{
+    startExplosion(lastx-camerax-64,lasty-cameray-64)
+    for(const id in players){
+        let playerx = players[id].position.x + players[id].width/8
+        let playery = players[id].position.y + players[id].height/2
+        if(playerx>lastx-32 && playerx<lastx+32 && playery>lasty-32&& playery<lasty+32 ){
+            socket.emit('blastdamage',id)
+        }
+    }
+})
 
 //============================================//
 
@@ -356,7 +372,7 @@ if(!players[socket.id]){return}
     Resistance.draw()
 
     c.drawImage(cursor,cursorx- cursor.width/64,cursory-cursor.height/64,512/32,512/32) //original size 512x512 px
-
+    
     // tocheck.forEach(boundary => {boundary.draw()}) 
     // doortocheck.forEach(boundary => {boundary.draw()}) //can be used to locate barrier blocks
 
@@ -383,13 +399,14 @@ for(const id in players){
              }
            )
         ){
-            if(id!=projectiles[i].shootplayerid){
+            if(id!=projectiles[i].shootplayerid&&projectiles[i].id!=90){
                 socket.emit('projectilecollisionwp',{id:id,pid:i})
             }
             break
         }
     }
 }}
+
 
 
 if(rectangularcollision({
@@ -548,6 +565,7 @@ document.querySelector('#userform').addEventListener('submit',(e)=>{
     Health.xp=215
     Resistance.xp =215
     document.querySelector('#userform').style.display = 'none'
+    document.getElementById('canvas').style.cursor='none'
     socket.emit('addusername',(document.querySelector('#userinput').value))
 })
 
