@@ -16,7 +16,6 @@ app.get('/', (req,res)=>{
 
 const players = {}
 const backendprojectiles = {}
-
 let projectileID=0
 
 io.on('connection', (socket)=>{
@@ -72,14 +71,14 @@ io.on('connection', (socket)=>{
 
     })
 
-    socket.on('shoot', ({ x, y, angle ,hotbarid}) => {
+    socket.on('shoot', ({ x, y, angle ,hotbarid,playerpos}) => {
         projectileID++;
         const velocity = {
             x: Math.cos(angle) * 20,
             y: Math.sin(angle) * 20
         }
         backendprojectiles[projectileID] = {
-            x, y, velocity, playerID: socket.id,hotbarid
+            x, y, velocity, playerID: socket.id,hotbarid,playerpos
         }
     })
 
@@ -106,6 +105,18 @@ io.on('connection', (socket)=>{
             
         }
         io.emit('score--ofid',playerid)
+        io.emit('updatePlayer',players)
+    })
+    socket.on('blastdamage',(id)=>{
+         
+         if(players[id].xp<=0){
+            delete players[id]
+        }
+        if(players[id]){players[id].xp-=20}
+          io.emit('score--ofid',id)
+          io.emit('updatePlayer',players)
+
+
     })
 
     socket.on('disconnect',(reason)=>{
@@ -118,8 +129,22 @@ io.on('connection', (socket)=>{
 
 setInterval(() => {
     for (const id in backendprojectiles) {
-        backendprojectiles[id].x += backendprojectiles[id].velocity.x
-        backendprojectiles[id].y += backendprojectiles[id].velocity.y
+        if(backendprojectiles[id].hotbarid==6){
+        backendprojectiles[id].x += backendprojectiles[id].velocity.x/3
+        backendprojectiles[id].y += backendprojectiles[id].velocity.y/3
+        const lastx = backendprojectiles[id].x-backendprojectiles[id].playerpos.x  
+        const lasty = backendprojectiles[id].y-backendprojectiles[id].playerpos.y 
+        if(Math.sqrt(lastx*lastx + lasty*lasty)>200){
+          
+          io.emit('blast',({lastx:backendprojectiles[id].x,lasty:backendprojectiles[id].y}))
+          delete backendprojectiles[id]
+       }
+        }
+        else{
+            backendprojectiles[id].x += backendprojectiles[id].velocity.x
+            backendprojectiles[id].y += backendprojectiles[id].velocity.y
+
+        }
     }
     io.emit('updateprojectiles', backendprojectiles)
     // io.emit('updatePlayer',players)
