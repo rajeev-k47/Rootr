@@ -108,3 +108,21 @@ function touchmove(e){
 
 }
 
+let row=1,column=1
+let interval
+let bx=0,by=0
+function playExplosion(){
+    c.drawImage(bomb_animation,128*(row-1),128*(column-1),128,128,bx,by,128,128)
+    if(row%8==0){
+        column++;row=1
+     }
+     row++
+    if (column<= 6 && row<=8){
+        requestAnimationFrame(playExplosion)
+    }
+}
+function startExplosion(x,y) {
+    row=1,column=1
+    playExplosion(x,y)
+    bx=x ;by=y
+}
