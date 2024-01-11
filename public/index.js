@@ -24,11 +24,9 @@ const playerleftImage = new Image();playerleftImage.src = './img/Playersprite/pl
 const playerrightImage = new Image();playerrightImage.src = './img/Playersprite/playerRight.png'
 const Blink = new Image();Blink.src = './img/blink.png'
 const microphone = new Image();microphone.src = './img/Playersprite/microphone.png'
-// const Bullets =new Image();Bullets.src='./img/Bullets.png'
 const Bullets =new Image();Bullets.src='./img/Bullat.png'
-
+const playerShield =new Image();playerShield.src='./img/Resistance/shield.png'
 const Hotbar =new Image();Hotbar.src='./img/Hotbar.png'
-// const Bulletsforhotbar =new Image();Bulletsforhotbar.src='./img/Bulletscombine.png'
 const Bulletsforhotbar =new Image();Bulletsforhotbar.src='./img/Bullet.png'
 
 const cursor = new Image(); cursor.src='./img/cursor.png'
@@ -88,7 +86,7 @@ let Resistance= new Ability({
 
 let inv = new inventory({
     id:1,
-    Hotbarid: [40,30,21,15,10,6,100]
+    Hotbarid: [40,30,21,15,10,6,10]
 
 })
 
@@ -205,7 +203,8 @@ socket.on('updatePlayer', (backendPlayers) => {
                     s: {pressed: false},
                     d: {pressed: false},
                     q: {pressed: false}
-                }
+                },
+                shield:false
             });
             // data-score ="${backendPlayer.score}"
         document.querySelector('#playerlabels').innerHTML+=`<div data-id ="${id}" > ${backendPlayer.username}: ${players[id].score} </div>`
@@ -220,6 +219,7 @@ socket.on('updatePlayer', (backendPlayers) => {
             players[id].xp = backendPlayer.xp
             players[id].roomid = backendPlayer.roomid
             players[id].keys = backendPlayer.keys
+            players[id].shield = backendPlayer.keys.q.pressed
             socket.on('score--ofid',(id)=>{
                 if(id===socket.id){
                     Health.xp=players[id].xp}
@@ -349,7 +349,6 @@ if(!players[socket.id]){return}
         
         
     }
-    let shield = false
     let moving = true
     let tocheck
 
@@ -397,7 +396,7 @@ for(const id in players){
             rectangle2: players[id],
             rectangle1: projectiles[i]
              }
-           )
+           )&&!players[id].shield
         ){
             if(id!=projectiles[i].shootplayerid&&projectiles[i].id!=90){
                 socket.emit('projectilecollisionwp',{id:id,pid:i})
@@ -406,9 +405,29 @@ for(const id in players){
         }
     }
 }}
+let shields={
+    image:playerShield,
+    position:{x:players[socket.id].position.x-players[socket.id].width/2,y:players[socket.id].position.y-players[socket.id].height/4},
+    width:70,
+    height:70
+
+}
 
 
-
+if(keys.q.pressed){
+    c.drawImage(shields.image,shields.position.x-camerax,shields.position.y-cameray,shields.width,shields.height)
+    for(const i in projectiles){
+        console.log(projectiles[i].position.x,projectiles[i].position.y)
+        console.log(shields.position.x,shields.position.y)
+        if(rectangularcollisionwithoutwalls({
+            rectangle2:shields,
+            rectangle1:projectiles[i]
+        })){
+            
+            socket.emit('shieldhit',i)
+            console.log('s')
+        }}
+}
 if(rectangularcollision({
     rectangle1:players[socket.id],
     rectangle2:heal
@@ -416,6 +435,7 @@ if(rectangularcollision({
     socket.emit('stops',{id:"heal", playerid: socket.id})
     
 }
+
 
 for(const id in players){
     for(let i =0 ; i<doortocheck.length; i++){
@@ -545,13 +565,9 @@ for(const id in players){
 
         }
     }
-    else if(keys.q.pressed){
-        
-    }
+    
+    
     socket.emit('keys',keys)
-    
-        
-    
     
 }
 
