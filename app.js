@@ -118,7 +118,10 @@ io.on('connection', (socket)=>{
 
 
     })
-
+    socket.on('shieldhit',(i)=>{
+            delete backendprojectiles[i]
+    })
+    
     socket.on('disconnect',(reason)=>{
         console.log(reason)
         delete players[socket.id]
