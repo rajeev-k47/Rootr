@@ -30,8 +30,8 @@ function checkkeydown(e){
         case 'd':
             keys.d.pressed = true
             break
-        case 'q':
-            keys.q.pressed = true
+        case 'shift':
+            keys.shift.pressed = true
             break
     }
     socket.emit('input',keys)
@@ -56,8 +56,8 @@ function checkkeyup(e){
             keys.d.pressed = false
             players[socket.id].moving = false
             break
-        case 'q':
-            keys.q.pressed = false
+        case 'shift':
+            keys.shift.pressed = false
             break
     }
     socket.emit('input',keys)
