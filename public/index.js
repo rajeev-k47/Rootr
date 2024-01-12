@@ -2,7 +2,7 @@ const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
 const socket = io()
 
-Agora()
+// Agora()
 
 // const devicepixelratio = window.devicePixelRatio || 1
 canvas.width = window.innerWidth
@@ -196,13 +196,14 @@ socket.on('updatePlayer', (backendPlayers) => {
                 spn : 2,
                 score:0,
                 xp:215,
+                res:215,
                 roomid:1,
                 keys : {
                     w: {pressed: false},
                     a: {pressed: false},
                     s: {pressed: false},
                     d: {pressed: false},
-                    q: {pressed: false}
+                    shift: {pressed: false}
                 },
                 shield:false
             });
@@ -217,12 +218,16 @@ socket.on('updatePlayer', (backendPlayers) => {
             players[id].username = backendPlayer.username
             players[id].score=backendPlayer.score
             players[id].xp = backendPlayer.xp
+            players[id].res=backendPlayer.res
             players[id].roomid = backendPlayer.roomid
             players[id].keys = backendPlayer.keys
-            players[id].shield = backendPlayer.keys.q.pressed
+            players[id].shield = backendPlayer.keys.shift.pressed
             socket.on('score--ofid',(id)=>{
                 if(id===socket.id){
                     Health.xp=players[id].xp}
+            })
+            socket.on('res--ofid',(id)=>{
+                     Resistance.xp=players[id].res
             })
             if(players[socket.id]){background.id= players[socket.id].roomid}
             document.querySelector(`div[data-id="${id}"]`).innerHTML= `${backendPlayer.username}: ${backendPlayer.score}`
@@ -277,7 +282,7 @@ const keys = {
     a: {pressed: false},
     s: {pressed: false},
     d: {pressed: false},
-    q: {pressed: false}
+    shift: {pressed: false}
 }
 
 let touchup,touchdown,touchleft,touchright
@@ -312,6 +317,7 @@ convertmap(Door0,doormap0,door0,20481,2)
 //================================================================================//
 let camerax=0 
 let cameray=0
+let allow
 function animate() {
     c.clearRect(0, 0, canvas.width, canvas.height);
     requestAnimationFrame(animate)
@@ -326,6 +332,19 @@ function animate() {
    }
 
 if(!players[socket.id]){return}
+  c.beginPath()
+   let playercentrex = players[socket.id].position.x-camerax+players[socket.id].width/2
+   let playercentrey = players[socket.id].position.y-cameray+players[socket.id].height/2
+   for(const id in players){
+    if(id!=socket.id&& players[id].roomid==players[socket.id].roomid){
+        startline(players[id].position.x-camerax,players[id].position.y-cameray,playercentrex,playercentrey)
+        c.moveTo(startx,starty) 
+        c.lineTo(endx,endy)
+        c.stroke()   
+     
+    }
+   }
+   
 
 
     for (const id in players) {
@@ -335,7 +354,7 @@ if(!players[socket.id]){return}
             c.font = "bold 15px Comic Sans MS";
             c.fillStyle="white"
             c.textAlign= 'center'
-            c.fillText(player.username,player.position.x+player.width/2-camerax,player.position.y-cameray)
+            if(allow){c.fillText(player.username,player.position.x+player.width/2-camerax,player.position.y-cameray)}
               if (!players[id].mute) {
                 c.drawImage(microphone, player.position.x-camerax, player.position.y-cameray)
             }
@@ -356,11 +375,13 @@ if(!players[socket.id]){return}
         foreground.drawforeground(camerax,cameray,Foreground1)
         tocheck = boundaries1
         doortocheck = door1
+        allow=true
       }
     else if(players[socket.id].roomid==0){
         foreground.drawforeground(camerax,cameray,Foreground0)
         tocheck = boundaries0
         doortocheck = door0
+        allow=true
     }
 
 
@@ -414,7 +435,7 @@ let shields={
 }
 
 
-if(keys.q.pressed){
+if(keys.shift.pressed){
     c.drawImage(shields.image,shields.position.x-camerax,shields.position.y-cameray,shields.width,shields.height)
     for(const i in projectiles){
         console.log(projectiles[i].position.x,projectiles[i].position.y)
@@ -423,9 +444,7 @@ if(keys.q.pressed){
             rectangle2:shields,
             rectangle1:projectiles[i]
         })){
-            
             socket.emit('shieldhit',i)
-            console.log('s')
         }}
 }
 if(rectangularcollision({
