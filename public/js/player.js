@@ -1,5 +1,5 @@
 class Sprite {
-    constructor({ position, image, frames = { max: 1} ,sprites,spn,score,username,id,xp,roomid,shield}) {
+    constructor({ position, image, frames = { max: 1} ,sprites,spn,score,username,id,xp,roomid,shield,res}) {
         this.position = position
         this.image = image
         this.frames = {...frames , val:0 , elapsed : 0}
@@ -14,6 +14,7 @@ class Sprite {
         this.score = score
         this.username = username
         this.id = id
+        this.res=res
         this.xp=xp
         this.roomid=roomid
         this.shield=shield
