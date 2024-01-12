@@ -56,8 +56,9 @@ io.on('connection', (socket)=>{
             a: {pressed: false},
             s: {pressed: false},
             d: {pressed: false},
-            q: {pressed: false}
-        }
+            shift: {pressed: false}
+        },
+        res:215
         
     }
     io.emit('updatePlayer', players)
@@ -86,7 +87,7 @@ io.on('connection', (socket)=>{
         delete backendprojectiles[id]
     })
     socket.on('projectilecollisionwp',({id,pid})=>{
-        players[id].xp-=10
+        if(players[id]){players[id].xp-=5}
         if(players[id].xp<=0){
             delete players[id]
         }
@@ -96,7 +97,7 @@ io.on('connection', (socket)=>{
 
     })
     socket.on('keys',(keys)=>{
-        players[socket.id].keys = keys
+        if(players[socket.id]){players[socket.id].keys = keys}
         io.emit('updatePlayer',players)
     })
     socket.on('stops',({id,playerid})=>{
@@ -119,6 +120,7 @@ io.on('connection', (socket)=>{
 
     })
     socket.on('shieldhit',(i)=>{
+            players[socket.id].res-=20
             delete backendprojectiles[i]
     })
     
