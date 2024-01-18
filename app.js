@@ -75,8 +75,8 @@ io.on('connection', (socket)=>{
     socket.on('shoot', ({ x, y, angle ,hotbarid,playerpos}) => {
         projectileID++;
         const velocity = {
-            x: Math.cos(angle) * 20,
-            y: Math.sin(angle) * 20
+            x: Math.cos(angle) * 2,
+            y: Math.sin(angle) * 2
         }
         backendprojectiles[projectileID] = {
             x, y, velocity, playerID: socket.id,hotbarid,playerpos
@@ -103,7 +103,9 @@ io.on('connection', (socket)=>{
     socket.on('stops',({id,playerid})=>{
         if(id=="heal"&& players[playerid].xp<=215){
             players[playerid].xp+=0.2
-            
+        }
+        else if(id=="Resist",players[playerid].res<=215){
+            players[playerid].res+=0.3
         }
         io.emit('score--ofid',playerid)
         io.emit('updatePlayer',players)
@@ -129,10 +131,22 @@ io.on('connection', (socket)=>{
         delete players[socket.id]
         io.emit('updatePlayer',players)
     })
+    //========================//
+    
 
 })
-
+let spawnx,spawny,spawnid
+   
+    setInterval(()=>{
+    spawnx=Math.random()
+    spawny=Math.random()
+    spawnid=Math.random()
+        io.emit('spawnitems',({bspawnx:spawnx,bspawny:spawny,bspawnid:spawnid}))
+    },5000)
 setInterval(() => {
+    
+
+
     for (const id in backendprojectiles) {
         if(backendprojectiles[id].hotbarid==6){
         backendprojectiles[id].x += backendprojectiles[id].velocity.x/3
