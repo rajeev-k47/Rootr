@@ -2,7 +2,7 @@ const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
 const socket = io()
 
-// Agora()
+Agora()
 
 // const devicepixelratio = window.devicePixelRatio || 1
 canvas.width = window.innerWidth
@@ -13,6 +13,7 @@ c.fillRect(30, 0, canvas.width, canvas.height)
 const offset = {x: 100,y : 0}//Offset to the map
 
 //==========Loading images=========//
+const HOTBAR={}
 const image = new Image();image.src = './img/bg.png'
 const bgimage=new Image();bgimage.src = './img/background1.png'
 const Foreground1 = new Image();Foreground1.src = './img/foreground1.png'
@@ -44,6 +45,7 @@ const Resbar2 =new Image();Resbar2.src='./img/Resistance/meter_bar_holder_center
 const Resbar3 =new Image();Resbar3.src='./img/Resistance/meter_bar_holder_right_edge_purple.png'
 const Resbar4 =new Image();Resbar4.src='./img/Resistance/meter_icon_holder_purple.png'
 const Resbaricon =new Image();Resbaricon.src='./img/Resistance/sheild.png'
+const Resist =new Image();Resist.src='./img/Resistance.png'
 //=============================================//
 //============Loading audio====================//
 const walksound = new Audio;walksound.src = './data/audio/walksound.mp3'
@@ -119,8 +121,16 @@ const foreground = new Rooms({
 //================================//
 const heal = new Stops({
     image:Blink,
-    position:{x:442,y:205}
+    position:{x:442,y:205},
+    width:20,
+    height:20
 
+})
+const Resist_up =new Stops({
+    image:Resist,
+    position:{x:1254,y:502},
+    width:45,
+    height:45
 })
 
 
@@ -224,11 +234,11 @@ socket.on('updatePlayer', (backendPlayers) => {
             players[id].shield = backendPlayer.keys.shift.pressed
             socket.on('score--ofid',(id)=>{
                 if(id===socket.id){
-                    Health.xp=players[id].xp}
+                    Health.xp=players[id].xp
+                    Resistance.xp=players[id].res
+                }
             })
-            socket.on('res--ofid',(id)=>{
-                     Resistance.xp=players[id].res
-            })
+            
             if(players[socket.id]){background.id= players[socket.id].roomid}
             document.querySelector(`div[data-id="${id}"]`).innerHTML= `${backendPlayer.username}: ${backendPlayer.score}`
 
@@ -307,6 +317,9 @@ const doormap1 = []
 const doormap0 = []
 const door1=[]
 const door0=[]
+const spawn ={}
+let i=0
+let spawnx,spawny,spawnid
 
 convertmap(collisions2,collisionsMap1,boundaries1,106501,1)//Mapconvertor.js
 convertmap(collisions1,collisionsMap0,boundaries0,36870,1)//Mapconvertor.js
@@ -328,7 +341,8 @@ function animate() {
 
     background.drawroom(camerax,cameray);
    if(players[socket.id]&&players[socket.id].roomid==1){
-    heal.draw(camerax,cameray)
+    heal.draw(camerax,cameray,20,20)
+    Resist_up.draw(camerax,cameray,41,40)
    }
 
 if(!players[socket.id]){return}
@@ -344,6 +358,10 @@ if(!players[socket.id]){return}
      
     }
    }
+  
+
+
+
    
 
 
@@ -370,7 +388,9 @@ if(!players[socket.id]){return}
     }
     let moving = true
     let tocheck
-
+    for(const i in spawn){
+        if(spawn[i].roomid==players[socket.id].roomid){spawn[i].draw()}
+     }
     if(players[socket.id].roomid==1){
         foreground.drawforeground(camerax,cameray,Foreground1)
         tocheck = boundaries1
@@ -390,6 +410,7 @@ if(!players[socket.id]){return}
 //=================================================//
     Health.draw()
     Resistance.draw()
+    
 
     c.drawImage(cursor,cursorx- cursor.width/64,cursory-cursor.height/64,512/32,512/32) //original size 512x512 px
     
@@ -438,12 +459,11 @@ let shields={
 if(keys.shift.pressed){
     c.drawImage(shields.image,shields.position.x-camerax,shields.position.y-cameray,shields.width,shields.height)
     for(const i in projectiles){
-        console.log(projectiles[i].position.x,projectiles[i].position.y)
-        console.log(shields.position.x,shields.position.y)
         if(rectangularcollisionwithoutwalls({
             rectangle2:shields,
             rectangle1:projectiles[i]
         })){
+            Resistance.xp-=10
             socket.emit('shieldhit',i)
         }}
 }
@@ -452,9 +472,13 @@ if(rectangularcollision({
     rectangle2:heal
 })){
     socket.emit('stops',{id:"heal", playerid: socket.id})
-    
 }
-
+if(rectangularcollisionwithoutwalls({
+    rectangle1:players[socket.id],
+    rectangle2:Resist_up
+})){
+    socket.emit('stops',{id:"Resist", playerid: socket.id})
+}
 
 for(const id in players){
     for(let i =0 ; i<doortocheck.length; i++){
@@ -588,14 +612,36 @@ for(const id in players){
     
     socket.emit('keys',keys)
     
+    
 }
 
 animate()
+socket.on('spawnitems',({bspawnx,bspawny,bspawnid})=>{
+    spawnx=bspawnx
+    spawny=bspawny
+    spawnid=bspawnid
+})
 
+console.log(spawnx,spawny,spawnid)
+let spawnbool,id=0
+setInterval(()=>{
+        console.log(spawnx,spawny,spawnid)
+        if(spawnbool){spawn[i] = new spawnitems({
+            position:{x:spawnx*1380+115,y:spawny*650+70},
+            id:parseInt(spawnid*7),
+            roomid:players[socket.id].roomid
+        })
+        i++
+}},5000)
+setInterval(()=>{
+    delete spawn[id]
+    id++
+},10000)
 window.addEventListener('keydown', checkkeydown)
 window.addEventListener('keyup',checkkeyup)
 
 document.querySelector('#userform').addEventListener('submit',(e)=>{
+    spawnbool=true
     e.preventDefault()
     Health.xp=215
     Resistance.xp =215
