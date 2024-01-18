@@ -29,13 +29,23 @@ class Boundary {
     }
 }
 class Stops{
-    constructor({position,image}){
+    constructor({position,image,width,height}){
         this.image=image
         this.position= position
-        this.width= this.image.width
-        this.height= this.image.height
+        this.width= width
+        this.height=height
     }
-    draw(x,y){
-        c.drawImage(this.image,this.position.x-x,this.position.y-y)
+    draw(x,y,i,j){
+        c.drawImage(this.image,this.position.x-x,this.position.y-y,i,j)
+    }
+}
+class spawnitems{
+    constructor({position,id,roomid}){
+        this.position=position
+        this.id=25*id
+        this.roomid=roomid
+    }
+    draw(){
+        c.drawImage(Bulletsforhotbar,this.id,0,25,25,this.position.x-camerax,this.position.y-cameray,10,10)
     }
 }
