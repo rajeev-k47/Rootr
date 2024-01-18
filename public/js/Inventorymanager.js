@@ -15,6 +15,7 @@ class inventory{
         for(let i=0 ; i <7; i++){
             if(inv.Hotbarid[i]==0){continue}
             c.drawImage(Bulletsforhotbar,this.id*i,0,25,25,35,(80+42*i),25,25)
+            HOTBAR[i] ={placex:this.id*i,placey:0}
             c.fillStyle = 'black'
             c.fillText(`x${this.Hotbarid[i]}`,75,110+42*i)
             
