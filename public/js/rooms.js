@@ -42,10 +42,12 @@ class Stops{
 class spawnitems{
     constructor({position,id,roomid}){
         this.position=position
-        this.id=25*id
+        this.id=id
         this.roomid=roomid
+        this.width=10
+        this.height=10
     }
     draw(){
-        c.drawImage(Bulletsforhotbar,this.id,0,25,25,this.position.x-camerax,this.position.y-cameray,10,10)
+        c.drawImage(Bulletsforhotbar,this.id*25,0,25,25,this.position.x-camerax,this.position.y-cameray,10,10)
     }
 }
