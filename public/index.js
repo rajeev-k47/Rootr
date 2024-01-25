@@ -218,7 +218,7 @@ socket.on('updatePlayer', (backendPlayers) => {
                 shield:false
             });
             // data-score ="${backendPlayer.score}"
-        document.querySelector('#playerlabels').innerHTML+=`<div data-id ="${id}" > ${backendPlayer.username}: ${players[id].score} </div>`
+        document.querySelector('#playerlabels').innerHTML+=`<div style="border-color:white" data-id ="${id}" > ${backendPlayer.username}: ${players[id].score} </div>`
         }
         else {
             players[id].position.x = backendPlayer.xx;
@@ -232,10 +232,10 @@ socket.on('updatePlayer', (backendPlayers) => {
             players[id].roomid = backendPlayer.roomid
             players[id].keys = backendPlayer.keys
             players[id].shield = backendPlayer.keys.shift.pressed
-            socket.on('score--ofid',(id)=>{
-                if(id===socket.id){
-                    Health.xp=players[id].xp
-                    Resistance.xp=players[id].res
+            socket.on('score--ofid',(pid)=>{
+                if(pid===socket.id){
+                    Health.xp=players[pid].xp
+                    Resistance.xp=players[pid].res
                 }
             })
             
@@ -275,7 +275,7 @@ socket.on('updatePlayer', (backendPlayers) => {
 
 });
 socket.on('blast', ({lastx,lasty})=>{
-    startExplosion(lastx-camerax-64,lasty-cameray-64)
+    startExplosion(lastx-64,lasty-64)//64 as width of animation
     for(const id in players){
         let playerx = players[id].position.x + players[id].width/8
         let playery = players[id].position.y + players[id].height/2
@@ -283,6 +283,23 @@ socket.on('blast', ({lastx,lasty})=>{
             socket.emit('blastdamage',id)
         }
     }
+})
+
+socket.on('spawnitems',(spawnarray)=>{
+    for(const id in spawnarray){
+    if(id>=i){
+        spawn[i]= new spawnitems({
+         position:{x:spawnarray[id].position.x,y:spawnarray[id].position.y},
+         id:spawnarray[id].id,
+         roomid:spawnarray[id].roomid
+    })
+    i++
+}
+}
+})
+
+socket.on('delspawnbybackend',(i)=>{
+    delete spawn[i]
 })
 
 //============================================//
@@ -317,7 +334,7 @@ const doormap1 = []
 const doormap0 = []
 const door1=[]
 const door0=[]
-const spawn ={}
+let spawn ={}
 let i=0
 let spawnx,spawny,spawnid
 
@@ -330,7 +347,6 @@ convertmap(Door0,doormap0,door0,20481,2)
 //================================================================================//
 let camerax=0 
 let cameray=0
-let allow
 function animate() {
     c.clearRect(0, 0, canvas.width, canvas.height);
     requestAnimationFrame(animate)
@@ -359,12 +375,6 @@ if(!players[socket.id]){return}
     }
    }
   
-
-
-
-   
-
-
     for (const id in players) {
         const player = players[id];
         if(players[id].roomid==players[socket.id].roomid){
@@ -372,38 +382,46 @@ if(!players[socket.id]){return}
             c.font = "bold 15px Comic Sans MS";
             c.fillStyle="white"
             c.textAlign= 'center'
-            if(allow){c.fillText(player.username,player.position.x+player.width/2-camerax,player.position.y-cameray)}
               if (!players[id].mute) {
                 c.drawImage(microphone, player.position.x-camerax, player.position.y-cameray)
             }
-            for(const id in projectiles){
-                const Projectile=projectiles[id]
-                Projectile.draw(camerax,cameray)
-            }
-        
-        }
-        
-        
-        
+        }  
+    }
+    for(const id in projectiles){
+        const Projectile=projectiles[id]
+        Projectile.draw(camerax,cameray)
     }
     let moving = true
     let tocheck
-    for(const i in spawn){
-        if(spawn[i].roomid==players[socket.id].roomid){spawn[i].draw()}
+    for(const id in players){
+        for(const i in spawn){
+            if(spawn[i].roomid==players[socket.id].roomid){
+                spawn[i].draw()}
+            if(rectangularcollisionwithoutwalls({
+                rectangle2:players[id],
+                rectangle1:spawn[i]
+            })){
+                let spawnid= spawn[i].id
+                inv.Hotbarid[spawnid]+=parseInt(15-3*(spawnid)*Math.random())
+                socket.emit('delspawnitem',i)
+            }
+        
      }
+    }
     if(players[socket.id].roomid==1){
         foreground.drawforeground(camerax,cameray,Foreground1)
         tocheck = boundaries1
         doortocheck = door1
-        allow=true
       }
     else if(players[socket.id].roomid==0){
         foreground.drawforeground(camerax,cameray,Foreground0)
         tocheck = boundaries0
         doortocheck = door0
-        allow=true
     }
-
+    for(const id in players){
+        const player =players[id]
+        c.fillText(player.username,player.position.x+player.width/2-camerax,player.position.y-cameray)
+    }
 
     
     inv.drawitems()
@@ -438,7 +456,7 @@ for(const id in players){
             rectangle2: players[id],
             rectangle1: projectiles[i]
              }
-           )&&!players[id].shield
+           )&& !players[id].shield
         ){
             if(id!=projectiles[i].shootplayerid&&projectiles[i].id!=90){
                 socket.emit('projectilecollisionwp',{id:id,pid:i})
@@ -446,28 +464,33 @@ for(const id in players){
             break
         }
     }
-}}
-let shields={
-    image:playerShield,
-    position:{x:players[socket.id].position.x-players[socket.id].width/2,y:players[socket.id].position.y-players[socket.id].height/4},
-    width:70,
-    height:70
-
+}
+    
 }
 
 
-if(keys.shift.pressed){
+
+
+for(const id in players){
+    let shields={
+        image:playerShield,
+        position:{x:players[id].position.x-players[id].width/2,y:players[id].position.y-players[id].height/4},
+        width:70,
+        height:70
+    
+    }
+if(players[id].shield&& players[id].res>=0){
     c.drawImage(shields.image,shields.position.x-camerax,shields.position.y-cameray,shields.width,shields.height)
     for(const i in projectiles){
         if(rectangularcollisionwithoutwalls({
             rectangle2:shields,
             rectangle1:projectiles[i]
         })){
-            Resistance.xp-=10
-            socket.emit('shieldhit',i)
+            socket.emit('shieldhit',({i:i,id:id}))
+            console.log(socket.id,id)
         }}
-}
-if(rectangularcollision({
+}}
+if(rectangularcollisionwithoutwalls({
     rectangle1:players[socket.id],
     rectangle2:heal
 })){
@@ -490,16 +513,16 @@ for(const id in players){
              }
            )
         ){
-            if(players[socket.id].roomid==0){
-                players[socket.id].roomid=1
-                players[socket.id].position.x=120
-                socket.emit('roomchange',players[socket.id].roomid)
+            if(players[id].roomid==0){
+                players[id].roomid=1
+                players[id].position.x=120
+                socket.emit('roomchange',({id:id,roomid:players[id].roomid}))
                 break
             }
-            else if(players[socket.id].roomid==1){
-                players[socket.id].roomid=0
-                players[socket.id].position.x =1480
-                 socket.emit('roomchange',players[socket.id].roomid)
+            else if(players[id].roomid==1){
+                players[id].roomid=0
+                players[id].position.x =1480
+                 socket.emit('roomchange',({id:id,roomid:players[id].roomid}))
                  break
             }
             
@@ -609,34 +632,14 @@ for(const id in players){
         }
     }
     
-    
+    if(!(players[socket.id].res>=0)){keys.shift.pressed=false}
     socket.emit('keys',keys)
     
     
 }
 
 animate()
-socket.on('spawnitems',({bspawnx,bspawny,bspawnid})=>{
-    spawnx=bspawnx
-    spawny=bspawny
-    spawnid=bspawnid
-})
 
-console.log(spawnx,spawny,spawnid)
-let spawnbool,id=0
-setInterval(()=>{
-        console.log(spawnx,spawny,spawnid)
-        if(spawnbool){spawn[i] = new spawnitems({
-            position:{x:spawnx*1380+115,y:spawny*650+70},
-            id:parseInt(spawnid*7),
-            roomid:players[socket.id].roomid
-        })
-        i++
-}},5000)
-setInterval(()=>{
-    delete spawn[id]
-    id++
-},10000)
 window.addEventListener('keydown', checkkeydown)
 window.addEventListener('keyup',checkkeyup)
 
