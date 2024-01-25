@@ -112,7 +112,7 @@ let row=1,column=1
 let interval
 let bx=0,by=0
 function playExplosion(){
-    c.drawImage(bomb_animation,128*(row-1),128*(column-1),128,128,bx,by,128,128)
+    c.drawImage(bomb_animation,128*(row-1),128*(column-1),128,128,bx-camerax,by-cameray,128,128)
     if(row%8==0){
         column++;row=1
      }
