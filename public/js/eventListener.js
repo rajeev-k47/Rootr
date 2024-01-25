@@ -33,7 +33,8 @@ addEventListener('click', (event) => {
         y:canvas.height/2+cameray+playerdownImage.height/2,
         angle,
         hotbarid:mousewheelc,
-        playerpos:playerposition
+        playerpos:playerposition,
+        shootid:socket.id
     })
     }else if(event.clientX<66&&event.clientX>24){
         for(let i = 0;i<7;i++){
