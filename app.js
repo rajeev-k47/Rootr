@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 
 const http = require('http')
+const { send } = require('process')
 const server = http.createServer(app)
 const {Server} = require('socket.io')
 const io = new Server(server)
@@ -60,7 +61,10 @@ io.on('connection', (socket)=>{
             d: {pressed: false},
             shift: {pressed: false}
         },
-        res:215
+        res:215,
+        Team: Math.random()*10000,
+        Teamcolor: `rgb(0,0,0)`
+
         
     }
     io.emit('updatePlayer', players)
@@ -92,10 +96,16 @@ io.on('connection', (socket)=>{
             players[id].xp-= 2*backendprojectiles[pid].hotbarid+4
         if(players[id].xp<=0){
             delete players[id]
-            if(backendprojectiles[pid]){players[backendprojectiles[pid].playerID].score+=1}
-        }}
+            if(backendprojectiles[pid]){
+                players[backendprojectiles[pid].playerID].score+=1
+                players[backendprojectiles[pid].playerID].res=215
+                players[backendprojectiles[pid].playerID].xp=215
+            }
+            
+        }
+    }
+        
         delete backendprojectiles[pid]
-        io.emit('score--ofid',id)
         io.emit('updatePlayer',players)
 
     })
@@ -110,7 +120,6 @@ io.on('connection', (socket)=>{
          if(id=="Resist" && players[playerid].res<=215){
             players[playerid].res+=0.3
         }
-        io.emit('score--ofid',playerid)
         io.emit('updatePlayer',players)
     })
     socket.on('blastdamage',(id)=>{
@@ -120,7 +129,6 @@ io.on('connection', (socket)=>{
             delete players[id]
         }
         }
-          io.emit('score--ofid',id)
           io.emit('updatePlayer',players)
 
 
@@ -128,12 +136,23 @@ io.on('connection', (socket)=>{
     socket.on('shieldhit',({i,id})=>{
            if(players[id].res>=0){ players[id].res-=10}
             delete backendprojectiles[i]
-            io.emit('score--ofid',id)
             io.emit('updatePlayer',players)
     })
     socket.on('delspawnitem',(i)=>{
             delete spawn[i]
             io.emit('delspawnbybackend',i)
+    })
+    socket.on('updateTeam',({name,color})=>{
+            players[socket.id].Team=name
+            players[socket.id].Teamcolor=color
+    })
+    socket.on('request',({id,toid})=>{
+        io.emit('backendrequest',({pid:id,toid}))
+    })
+    socket.on('teamjoin',(senderid)=>{
+        players[socket.id].Team=players[senderid].Team
+        players[socket.id].Teamcolor=players[senderid].Teamcolor
+        io.emit('updatePlayer',players)
     })
     
     socket.on('disconnect',(reason)=>{
@@ -181,12 +200,14 @@ setInterval(()=>{
         number:i,
         elapsed:elapsed
     }
-    for(const j in spawn){if(spawn[j].elapsed+16000<currenttime){
+    for(const j in spawn){if(spawn[j].elapsed+13000<currenttime){
         delete spawn[j]
+        // console.log('despawneditem')
         io.emit('delspawnbybackend',j)}}
     i++
     io.emit('spawnitems',spawn)
-},5000)
+    // console.log('spawneditem')
+},7000)
 
 
 
