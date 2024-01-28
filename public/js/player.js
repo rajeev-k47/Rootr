@@ -1,5 +1,5 @@
 class Sprite {
-    constructor({ position, image, frames = { max: 1} ,sprites,spn,score,username,id,xp,roomid,shield,res}) {
+    constructor({ position, image, frames = { max: 1} ,sprites,spn,score,username,id,xp,roomid,shield,res,Team,Teamcolor}) {
         this.position = position
         this.image = image
         this.frames = {...frames , val:0 , elapsed : 0}
@@ -18,6 +18,8 @@ class Sprite {
         this.xp=xp
         this.roomid=roomid
         this.shield=shield
+        this.Team=Team
+        this.Teamcolor=Teamcolor
     }
     draw(x,y) {
         c.drawImage(
