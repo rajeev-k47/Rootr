@@ -83,9 +83,19 @@
     user-select: none;
     top: 5px;
     background: rgba(0, 0, 0, 0.3);
-    right: 5px;">
-    <div style="margin-bottom: 2px;">Leaderboard</div>
-    <div id="playerlabels"></div>
+    right: 5px;
+    border-radius: 15px;
+    z-index: 1;
+    cursor: alias;
+    border:1px solid blue;
+    ">
+    <div id="input">
+        <input id="Team" type="text" style="width: 90px;color: wheat;border-radius: 5px;margin: 0px;outline:none;border: 2px solid blue;background: rgba(0, 0, 0, 0.4);" placeholder="Team" > 
+        <button style="margin: 0px;color:wheat;border-radius: 5px;cursor: pointer;font: bold;background: rgba(0, 0, 0, 0.2);border: 2px solid blue" onclick="join()" >Join</button>
+    </div>
+    <hr>
+    <div style="margin-bottom: 2px;font-size: 17px;">Leaderboard</div>
+    <div style="cursor: pointer;" id="playerlabels"></div>
 </div>
 
 <canvas></canvas>
@@ -132,7 +142,10 @@
     </form>
 </div>
 
+<div id="request"></div>
+
 <button class="button-73" id="mute" role="button">Mute</button>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <script src="Agorajs/AgoraRTC_N-4.15.0.js"></script>
 <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
 <script src="js/Inventorymanager.js"></script>
