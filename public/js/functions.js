@@ -17,6 +17,7 @@ function rectangularcollisionwithoutwalls({rectangle1,rectangle2}){
 
 function checkkeydown(e){
         // e= event
+        if(Teamedit){return}
     switch (e.key.toLowerCase()) {
         case 'w':
             keys.w.pressed = true
@@ -30,6 +31,9 @@ function checkkeydown(e){
         case 'd':
             keys.d.pressed = true
             break
+        case 't':
+            keys.t.pressed=true
+            break
         case 'shift':
             keys.shift.pressed = true
             break
@@ -39,6 +43,8 @@ function checkkeydown(e){
 }
 
 function checkkeyup(e){
+    if(Teamedit){return}
+    
     switch (e.key.toLowerCase()) {
         case 'w':
             keys.w.pressed = false
@@ -55,6 +61,9 @@ function checkkeyup(e){
         case 'd':
             keys.d.pressed = false
             players[socket.id].moving = false
+            break
+        case 't':
+            keys.t.pressed=false
             break
         case 'shift':
             keys.shift.pressed = false
@@ -123,6 +132,29 @@ function playExplosion(){
 }
 function startExplosion(x,y) {
     row=1,column=1
-    playExplosion(x,y)
     bx=x ;by=y
+    playExplosion()
+}
+
+function r() {
+    return Math.floor(Math.random() * 256);
+  }
+
+function join(){
+    socket.emit('updateTeam',{name:document.getElementById('Team').value,color: "rgb("+r()+","+r()+","+r()+")"})
+    document.getElementById('input').innerHTML = "<div>Team : " + document.getElementById('Team').value + "</div>";
+    document.getElementById('input').style= "border: 3px solid black;border-radius:5px;font-size:15px;font-weight:bold;padding-left:5px;padding-right:5px"
+
+}
+function Accepted(){
+    clickallowed=false
+    document.getElementById('request').remove()
+    socket.emit('teamjoin',senderid)
+    console.log(players[socket.id].Team)
+
+
+    }
+function Rejected(){
+    clickallowed=false
+    document.getElementById('request').remove()
 }
