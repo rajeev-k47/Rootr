@@ -16,6 +16,7 @@ const offset = {x: 100,y : 0}//Offset to the map
 const HOTBAR={}
 const image = new Image();image.src = './img/bg.png'
 const bgimage=new Image();bgimage.src = './img/background1.png'
+const room3=new Image();room3.src = './img/Aroom3.png'
 const Foreground1 = new Image();Foreground1.src = './img/foreground1.png'
 const Foreground0 = new Image();Foreground0.src = './img/foreground0.png'
 
@@ -58,7 +59,7 @@ const shotgun = new Audio;shotgun.src= './data/audio/gun.mp3'
 let Health = new Ability({
     id:1,
     levelimage:healthbar1,
-    x:1210,
+    x:1150,
     y:0,
     bar2:healthbar2,
     bar4:healthbar4,
@@ -73,7 +74,7 @@ let Health = new Ability({
 let Resistance= new Ability({
     id:2,
     levelimage:Resbar1,
-    x:910,
+    x:880,
     y:0,
     bar2:Resbar2,
     bar4:Resbar3,
@@ -215,10 +216,12 @@ socket.on('updatePlayer', (backendPlayers) => {
                     d: {pressed: false},
                     shift: {pressed: false}
                 },
-                shield:false
+                shield:false,
+                Team:backendPlayer.Team,
+                Teamcolor:backendPlayer.Teamcolor
             });
             // data-score ="${backendPlayer.score}"
-        document.querySelector('#playerlabels').innerHTML+=`<div style="border-color:white" data-id ="${id}" > ${backendPlayer.username}: ${players[id].score} </div>`
+        document.querySelector('#playerlabels').innerHTML+=`<div style="border-color:white;padding-left:4px" data-id ="${id}" > ${backendPlayer.username}: ${players[id].score} </div>`
         }
         else {
             players[id].position.x = backendPlayer.xx;
@@ -232,14 +235,16 @@ socket.on('updatePlayer', (backendPlayers) => {
             players[id].roomid = backendPlayer.roomid
             players[id].keys = backendPlayer.keys
             players[id].shield = backendPlayer.keys.shift.pressed
-            socket.on('score--ofid',(pid)=>{
-                if(pid===socket.id){
-                    Health.xp=players[pid].xp
-                    Resistance.xp=players[pid].res
-                }
-            })
+            players[id].Team=backendPlayer.Team
+            players[id].Teamcolor=backendPlayer.Teamcolor
+
+            if(id==socket.id){
+                Health.xp=players[id].xp
+                Resistance.xp=players[id].res
+            }
             
             if(players[socket.id]){background.id= players[socket.id].roomid}
+            // if(Hover){document.querySelector(`div[data-id="${id}"]`).innerHTML="<div><button onclick=\"invite("+id+")\" style=\"border:3px solid blue;border-radius:5px \">Invite</button></div>"}
             document.querySelector(`div[data-id="${id}"]`).innerHTML= `${backendPlayer.username}: ${backendPlayer.score}`
 
             if (players[id].spn == 2) {
@@ -301,6 +306,15 @@ socket.on('spawnitems',(spawnarray)=>{
 socket.on('delspawnbybackend',(i)=>{
     delete spawn[i]
 })
+var senderid
+socket.on('backendrequest',({pid,toid})=>{
+    if(toid==socket.id){
+        senderid=pid
+    document.getElementById('request').innerHTML = "<div id=\"requestdiv\">============<br>Do you want to join " + players[pid].username + "'s party<br> <button onclick=\"Accepted()\" id=\"right\"style=\"padding-left:10px;padding-right:10px;font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; font-size:18px ;font-weight: bold;background-color:grey;border:4px solid blue;border-radius:5px;cursor:pointer\"> <i class=\"fa-solid fa-check\"></i></button> <button onclick=\"Rejected()\" id=\"wrong\" style=\"padding-left:10px;padding-right:10px;font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; font-size:18px ;font-weight: bold;background-color:grey;border:4px solid blue;border-radius:5px;cursor:pointer\"> <i class=\"fa-solid fa-xmark\"></i></button></div>";
+    document.getElementById('request').style="top:200px;right:0px;width:140px;height:100px;display:flex; position: absolute;border:2px solid blue;background-color:grey; padding-left :5px;border-radius:5px;font-size:20px;font-weight:bold"
+
+    
+}})
 
 //============================================//
 
@@ -309,6 +323,7 @@ const keys = {
     a: {pressed: false},
     s: {pressed: false},
     d: {pressed: false},
+    t: {pressed: false},
     shift: {pressed: false}
 }
 
@@ -336,7 +351,8 @@ const door1=[]
 const door0=[]
 let spawn ={}
 let i=0
-let spawnx,spawny,spawnid
+let spawnx,spawny,spawnid,Teamedit,clickallowed
+
 
 convertmap(collisions2,collisionsMap1,boundaries1,106501,1)//Mapconvertor.js
 convertmap(collisions1,collisionsMap0,boundaries0,36870,1)//Mapconvertor.js
@@ -366,7 +382,7 @@ if(!players[socket.id]){return}
    let playercentrex = players[socket.id].position.x-camerax+players[socket.id].width/2
    let playercentrey = players[socket.id].position.y-cameray+players[socket.id].height/2
    for(const id in players){
-    if(id!=socket.id&& players[id].roomid==players[socket.id].roomid){
+    if(id!=socket.id&& players[id].roomid==players[socket.id].roomid&&players[id].Team!=players[socket.id].Team){
         startline(players[id].position.x-camerax,players[id].position.y-cameray,playercentrex,playercentrey)
         c.moveTo(startx,starty) 
         c.lineTo(endx,endy)
@@ -420,7 +436,7 @@ if(!players[socket.id]){return}
     }
     for(const id in players){
         const player =players[id]
-        c.fillText(player.username,player.position.x+player.width/2-camerax,player.position.y-cameray)
+        if(players[id].roomid==players[socket.id].roomid){c.fillStyle=players[id].Teamcolor; c.fillText(player.username,player.position.x+player.width/2-camerax,player.position.y-cameray)}
     }
 
     
@@ -430,7 +446,7 @@ if(!players[socket.id]){return}
     Resistance.draw()
     
 
-    c.drawImage(cursor,cursorx- cursor.width/64,cursory-cursor.height/64,512/32,512/32) //original size 512x512 px
+    c.drawImage(cursor,cursorx- cursor.width/64,cursory-cursor.height/64,512/28,512/28) //original size 512x512 px
     
     // tocheck.forEach(boundary => {boundary.draw()}) 
     // doortocheck.forEach(boundary => {boundary.draw()}) //can be used to locate barrier blocks
@@ -458,7 +474,7 @@ for(const id in players){
              }
            )&& !players[id].shield
         ){
-            if(id!=projectiles[i].shootplayerid&&projectiles[i].id!=90){
+            if(id!=projectiles[i].shootplayerid&&projectiles[i].id!=90&&players[socket.id].Team!=players[id].Team){
                 socket.emit('projectilecollisionwp',{id:id,pid:i})
             }
             break
@@ -485,9 +501,8 @@ if(players[id].shield&& players[id].res>=0){
         if(rectangularcollisionwithoutwalls({
             rectangle2:shields,
             rectangle1:projectiles[i]
-        })){
+        })&&players[socket.id].Team!=players[id].Team){
             socket.emit('shieldhit',({i:i,id:id}))
-            console.log(socket.id,id)
         }}
 }}
 if(rectangularcollisionwithoutwalls({
@@ -631,10 +646,35 @@ for(const id in players){
 
         }
     }
-    
+
+
+
+   if(document.getElementById('Team')){document.getElementById('Team').addEventListener('focus',()=>{
+    Teamedit=true
+   })
+   document.getElementById('Team').addEventListener('focusout',()=>{
+    Teamedit=false
+   })}
     if(!(players[socket.id].res>=0)){keys.shift.pressed=false}
     socket.emit('keys',keys)
+    clickallowed=true
+    for(const id in players){
+        document.querySelector(`div[data-id="${id}"]`).addEventListener('click',()=>{
+            clickallowed=false
+            if(id!=socket.id){
+                socket.emit('request',({id:socket.id,toid:id}))
+            }
+        })}
+             
     
+
+
+
+
+    //=======================================================//
+    
+
+   
     
 }
 
@@ -643,11 +683,12 @@ animate()
 window.addEventListener('keydown', checkkeydown)
 window.addEventListener('keyup',checkkeyup)
 
+
 document.querySelector('#userform').addEventListener('submit',(e)=>{
-    spawnbool=true
     e.preventDefault()
     Health.xp=215
     Resistance.xp =215
+    inv.Hotbarid= [40,30,21,15,10,6,10]
     document.querySelector('#userform').style.display = 'none'
     document.getElementById('canvas').style.cursor='none'
     socket.emit('addusername',(document.querySelector('#userinput').value))
