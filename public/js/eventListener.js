@@ -19,7 +19,7 @@ addEventListener("wheel", (event) => {
 
 addEventListener('click', (event) => {
     
-                      
+    if(!clickallowed){return}                 
     if (!players[socket.id]) { return }
     const playerposition = {
         x: players[socket.id].position.x + players[socket.id].width /2 ,
