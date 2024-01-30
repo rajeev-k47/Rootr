@@ -1,4 +1,5 @@
 const express = require('express')
+const { rmSync } = require('fs')
 const app = express()
 
 const http = require('http')
@@ -23,12 +24,6 @@ let projectileID=0
 
 io.on('connection', (socket)=>{
     console.log('A user connected ')
-    socket.on('boundaries',(boundaries)=>{
-        for(const id in boundaries){
-            const boundary = boundaries[id]
-            
-        }
-    })
     socket.on('playerlocation',(position)=>{
         players[socket.id].xx = position.x 
         players[socket.id].yy = position.y 
@@ -63,7 +58,9 @@ io.on('connection', (socket)=>{
         },
         res:215,
         Team: Math.random()*10000,
-        Teamcolor: `rgb(0,0,0)`
+        Teamcolor: `rgb(0,0,0)`,
+        speed:5,
+        invis:false
 
         
     }
@@ -80,11 +77,11 @@ io.on('connection', (socket)=>{
     socket.on('shoot', ({ x, y, angle ,hotbarid,playerpos,shootid}) => {
         projectileID++;
         const velocity = {
-            x: Math.cos(angle) * 20,
-            y: Math.sin(angle) * 20
+            x: Math.cos(angle) *10,
+            y: Math.sin(angle) *10
         }
         backendprojectiles[projectileID] = {
-            x, y, velocity, playerID: shootid,hotbarid,playerpos
+            x, y, velocity, playerID: shootid,hotbarid,playerpos, trallowx:true,trallowy:true,approach:""
         }
     })
 
@@ -138,6 +135,19 @@ io.on('connection', (socket)=>{
             delete backendprojectiles[i]
             io.emit('updatePlayer',players)
     })
+    socket.on('speedupdate',({id,speed})=>{
+        players[id].speed=speed
+        setTimeout(()=>{
+            players[id].speed=5
+        },4000)
+    })
+    socket.on('invis',(id)=>{
+            players[id].invis=true
+            setTimeout(()=>{
+                players[id].invis=false
+            },5000)
+    })
+    
     socket.on('delspawnitem',(i)=>{
             delete spawn[i]
             io.emit('delspawnbybackend',i)
@@ -158,19 +168,26 @@ io.on('connection', (socket)=>{
     socket.on('disconnect',(reason)=>{
         console.log(reason)
         delete players[socket.id]
+        
         io.emit('updatePlayer',players)
     })
     //========================//
     
 
 })
-let spawnx,spawny,spawnid,elapsed,currenttime
+let spawnx,spawny,spawnid,elapsed,currenttime,closestplayer
 setInterval(() => {
     currenttime=Date.now()
     for (const id in backendprojectiles) {
+
+
+
+
+
+        //======================//
         if(backendprojectiles[id].hotbarid==6){
-        backendprojectiles[id].x += backendprojectiles[id].velocity.x/10
-        backendprojectiles[id].y += backendprojectiles[id].velocity.y/10
+        backendprojectiles[id].x += backendprojectiles[id].velocity.x/5
+        backendprojectiles[id].y += backendprojectiles[id].velocity.y/5
         const lastx = backendprojectiles[id].x-backendprojectiles[id].playerpos.x  
         const lasty = backendprojectiles[id].y-backendprojectiles[id].playerpos.y 
         
@@ -179,11 +196,39 @@ setInterval(() => {
           delete backendprojectiles[id]
        }
         }
+        else if(backendprojectiles[id].hotbarid==5 &&players[backendprojectiles[id].playerID]){
+            let mindistance = Infinity
+            for(const i in players){
+                if(i!=backendprojectiles[id].playerID&&players[i].roomid==players[backendprojectiles[id].playerID].roomid&&players[i].Team!=players[backendprojectiles[id].playerID].Team){
+                    let distance =  calcdistance(players[backendprojectiles[id].playerID],players[i])
+                    if(distance<mindistance){
+                        mindistance=distance
+                        closestplayer=players[i]
+                        
+                    }
+                    backendprojectiles[id].approach = closestplayer
+                }
+            }
+            // if(backendprojectiles[id].defined){
+                if(backendprojectiles[id].approach.xx+18>backendprojectiles[id].x){
+                backendprojectiles[id].x+=3} 
+                else{backendprojectiles[id].x-=3}
+            // }
+            // if(backendprojectiles[id].defined){
+                if(backendprojectiles[id].approach.yy+25>backendprojectiles[id].y){
+                backendprojectiles[id].y+=3}else{backendprojectiles[id].y-=3}
+            // }
+        }
         else{
             backendprojectiles[id].x += backendprojectiles[id].velocity.x
             backendprojectiles[id].y += backendprojectiles[id].velocity.y
+            // console.log(backendprojectiles[id])
 
         }
+        if(backendprojectiles[id]){
+        if(backendprojectiles[id].x<40||backendprojectiles[id].x>1500||backendprojectiles[id].y<80||backendprojectiles[id].y>750){
+            delete backendprojectiles[id]
+        }}
     }
     io.emit('updateprojectiles', backendprojectiles)
 },15)
@@ -200,17 +245,24 @@ setInterval(()=>{
         number:i,
         elapsed:elapsed
     }
-    for(const j in spawn){if(spawn[j].elapsed+13000<currenttime){
-        delete spawn[j]
-        // console.log('despawneditem')
-        io.emit('delspawnbybackend',j)}}
     i++
+    for(const j in spawn){if(spawn[j].elapsed+11000<currenttime){
+        delete spawn[j]
+        io.emit('delspawnbybackend',j)}}
+    
     io.emit('spawnitems',spawn)
-    // console.log('spawneditem')
+    console.log('spawneditem')
 },7000)
 
 
 
-server.listen(port,'10.81.29.30', ()=> {
+server.listen(port, ()=> {
     console.log(`App is listening on ${port}`)
 } )
+
+function calcdistance(player1,player2){
+        const dx = player2.xx-player1.xx
+        const dy = player2.yy-player1.yy
+
+        return Math.sqrt(dx*dx + dy*dy)
+}
