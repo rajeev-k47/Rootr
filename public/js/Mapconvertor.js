@@ -5,7 +5,7 @@ function convertmap(data,map,boundaries,collidetilenumber,indexnumber){
     }
     map.forEach((row, i) => {
     row.forEach((Symbol, j) => {
-        if(Symbol === collidetilenumber){
+        if(Symbol == collidetilenumber){
          boundaries.push(new Boundary({             //converting 2D array into blocks with position defined
             position: {
                 x: j * Boundary.width + offset.x,
@@ -17,7 +17,5 @@ function convertmap(data,map,boundaries,collidetilenumber,indexnumber){
         }
     })
 })
-socket.emit('boundaries',boundaries)
- return boundaries
 
 }
