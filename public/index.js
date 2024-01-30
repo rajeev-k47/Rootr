@@ -4,7 +4,6 @@ const socket = io()
 
 Agora()
 
-// const devicepixelratio = window.devicePixelRatio || 1
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 c.fillStyle = 'white'
@@ -24,6 +23,14 @@ const playerdownImage = new Image();playerdownImage.src = './img/Playersprite/pl
 const playerupImage = new Image();playerupImage.src = './img/Playersprite/playerUp.png'
 const playerleftImage = new Image();playerleftImage.src = './img/Playersprite/playerLeft.png'
 const playerrightImage = new Image();playerrightImage.src = './img/Playersprite/playerRight.png'
+const damageup = new Image();damageup.src= './img/Playersprite/damageup.png'
+const damagedown = new Image();damagedown.src= './img/Playersprite/damagedown.png'
+const damageleft = new Image();damageleft.src= './img/Playersprite/damageleft.png'
+const damageright = new Image();damageright.src= './img/Playersprite/damageright.png'
+const invisup = new Image();invisup.src= './img/Playersprite/invisUp.png'
+const invisdown = new Image();invisdown.src= './img/Playersprite/invisDown.png'
+const invisleft = new Image();invisleft.src= './img/Playersprite/invisLeft.png'
+const invisright = new Image();invisright.src= './img/Playersprite/invisRight.png'
 const Blink = new Image();Blink.src = './img/blink.png'
 const microphone = new Image();microphone.src = './img/Playersprite/microphone.png'
 const Bullets =new Image();Bullets.src='./img/Bullat.png'
@@ -47,6 +54,9 @@ const Resbar3 =new Image();Resbar3.src='./img/Resistance/meter_bar_holder_right_
 const Resbar4 =new Image();Resbar4.src='./img/Resistance/meter_icon_holder_purple.png'
 const Resbaricon =new Image();Resbaricon.src='./img/Resistance/sheild.png'
 const Resist =new Image();Resist.src='./img/Resistance.png'
+
+const speedup =new Image();speedup.src='./img/stamina.png'
+const invis = new Image();invis.src='./img/magic.png'
 //=============================================//
 //============Loading audio====================//
 const walksound = new Audio;walksound.src = './data/audio/walksound.mp3'
@@ -136,13 +146,9 @@ const Resist_up =new Stops({
 
 
 
-
-
-
-
 //===============================//
 const projectiles = {}
-
+let playerspeed=5
 
 
 //=============Player sprite=============//
@@ -164,7 +170,8 @@ socket.on('updateprojectiles', (backendprojectiles)=>{
             width:8,
             height:8,
             id:backendprojectile.hotbarid,
-            shootplayerid: backendprojectile.playerID
+            shootplayerid: backendprojectile.playerID,
+            velocity:backendprojectile.velocity
 
         })
         if(backendprojectile.playerID==socket.id){
@@ -174,7 +181,7 @@ socket.on('updateprojectiles', (backendprojectiles)=>{
     else{
         projectiles[id].position.x=backendprojectile.x
         projectiles[id].position.y=backendprojectile.y
-        
+   
      }
     }
 
@@ -218,7 +225,9 @@ socket.on('updatePlayer', (backendPlayers) => {
                 },
                 shield:false,
                 Team:backendPlayer.Team,
-                Teamcolor:backendPlayer.Teamcolor
+                Teamcolor:backendPlayer.Teamcolor,
+                speed:5
+
             });
             // data-score ="${backendPlayer.score}"
         document.querySelector('#playerlabels').innerHTML+=`<div style="border-color:white;padding-left:4px" data-id ="${id}" > ${backendPlayer.username}: ${players[id].score} </div>`
@@ -237,14 +246,16 @@ socket.on('updatePlayer', (backendPlayers) => {
             players[id].shield = backendPlayer.keys.shift.pressed
             players[id].Team=backendPlayer.Team
             players[id].Teamcolor=backendPlayer.Teamcolor
+            players[id].speed=backendPlayer.speed
+            players[id].invis=backendPlayer.invis
 
             if(id==socket.id){
+                playerspeed= players[id].speed
                 Health.xp=players[id].xp
                 Resistance.xp=players[id].res
             }
             
             if(players[socket.id]){background.id= players[socket.id].roomid}
-            // if(Hover){document.querySelector(`div[data-id="${id}"]`).innerHTML="<div><button onclick=\"invite("+id+")\" style=\"border:3px solid blue;border-radius:5px \">Invite</button></div>"}
             document.querySelector(`div[data-id="${id}"]`).innerHTML= `${backendPlayer.username}: ${backendPlayer.score}`
 
             if (players[id].spn == 2) {
@@ -285,6 +296,8 @@ socket.on('blast', ({lastx,lasty})=>{
         let playerx = players[id].position.x + players[id].width/8
         let playery = players[id].position.y + players[id].height/2
         if(playerx>lastx-32 && playerx<lastx+32 && playery>lasty-32&& playery<lasty+32 ){
+            players[id].sprites = {up:damageup,down:damagedown,left:damageleft,right:damageright}
+            setTimeout(()=>{players[id].sprites={up:playerupImage,down:playerdownImage,left:playerleftImage,right:playerrightImage}},200)
             socket.emit('blastdamage',id)
         }
     }
@@ -324,6 +337,8 @@ const keys = {
     s: {pressed: false},
     d: {pressed: false},
     t: {pressed: false},
+    r: {pressed: false},
+    i: {pressed: false},
     shift: {pressed: false}
 }
 
@@ -350,9 +365,9 @@ const doormap0 = []
 const door1=[]
 const door0=[]
 let spawn ={}
-let i=0
+let i=0,entity=5,invisnum=5
 let spawnx,spawny,spawnid,Teamedit,clickallowed
-
+const FPS = 120
 
 convertmap(collisions2,collisionsMap1,boundaries1,106501,1)//Mapconvertor.js
 convertmap(collisions1,collisionsMap0,boundaries0,36870,1)//Mapconvertor.js
@@ -365,7 +380,9 @@ let camerax=0
 let cameray=0
 function animate() {
     c.clearRect(0, 0, canvas.width, canvas.height);
-    requestAnimationFrame(animate)
+    setTimeout(() => {
+        requestAnimationFrame(animate);
+    }, 1000 / FPS);
 
     if(players[socket.id]){
     camerax = players[socket.id].position.x - canvas.width/2
@@ -379,10 +396,11 @@ function animate() {
 
 if(!players[socket.id]){return}
   c.beginPath()
+  c.lineWidth=8
    let playercentrex = players[socket.id].position.x-camerax+players[socket.id].width/2
    let playercentrey = players[socket.id].position.y-cameray+players[socket.id].height/2
    for(const id in players){
-    if(id!=socket.id&& players[id].roomid==players[socket.id].roomid&&players[id].Team!=players[socket.id].Team){
+    if(id!=socket.id&& players[id].roomid==players[socket.id].roomid&&players[id].Team!=players[socket.id].Team&&!players[id].invis){
         startline(players[id].position.x-camerax,players[id].position.y-cameray,playercentrex,playercentrey)
         c.moveTo(startx,starty) 
         c.lineTo(endx,endy)
@@ -393,7 +411,8 @@ if(!players[socket.id]){return}
   
     for (const id in players) {
         const player = players[id];
-        if(players[id].roomid==players[socket.id].roomid){
+        if(players[id].roomid==players[socket.id].roomid&&!player.invis){
+            player.sprites={up:playerupImage,down:playerdownImage,left:playerleftImage,right:playerrightImage}
             player.draw(camerax,cameray);
             c.font = "bold 15px Comic Sans MS";
             c.fillStyle="white"
@@ -402,6 +421,10 @@ if(!players[socket.id]){return}
                 c.drawImage(microphone, player.position.x-camerax, player.position.y-cameray)
             }
         }  
+        else if(player.invis&&id==socket.id){
+            player.sprites={up:invisup,down:invisdown,left:invisleft,right:invisright}
+            player.draw(camerax,cameray)
+        }
     }
     for(const id in projectiles){
         const Projectile=projectiles[id]
@@ -436,7 +459,7 @@ if(!players[socket.id]){return}
     }
     for(const id in players){
         const player =players[id]
-        if(players[id].roomid==players[socket.id].roomid){c.fillStyle=players[id].Teamcolor; c.fillText(player.username,player.position.x+player.width/2-camerax,player.position.y-cameray)}
+        if(players[id].roomid==players[socket.id].roomid&&!players[id].invis){c.fillStyle=players[id].Teamcolor; c.fillText(player.username,player.position.x+player.width/2-camerax,player.position.y-cameray)}
     }
 
     
@@ -458,11 +481,10 @@ for(let i=0 ;i <tocheck.length;i++){
     const boundary = tocheck[i]
     if(rectangularcollisionwithoutwalls({
         rectangle1: projectiles[id],
-        rectangle2: {...boundary, position:{x:boundary.position.x ,y:boundary.position.y}
-           }
+        rectangle2: boundary
          }
        )
-    ){socket.emit('projectilecollision',id);break}
+    ){socket.emit('projectilecollision',id)}
 }}
 
 for(const id in players){
@@ -476,16 +498,22 @@ for(const id in players){
         ){
             if(id!=projectiles[i].shootplayerid&&projectiles[i].id!=90&&players[socket.id].Team!=players[id].Team){
                 socket.emit('projectilecollisionwp',{id:id,pid:i})
+                if(projectiles[i].id==60){socket.emit('speedupdate',({id:id,speed:2.5}))}
+                players[id].sprites = {up:damageup,down:damagedown,left:damageleft,right:damageright}
+                setTimeout(()=>{players[id].sprites={up:playerupImage,down:playerdownImage,left:playerleftImage,right:playerrightImage}},200)
+
+                
             }
+            
             break
         }
+        
     }
 }
-    
+
 }
 
-
-
+drawpowers(entity,invisnum)
 
 for(const id in players){
     let shields={
@@ -501,7 +529,7 @@ if(players[id].shield&& players[id].res>=0){
         if(rectangularcollisionwithoutwalls({
             rectangle2:shields,
             rectangle1:projectiles[i]
-        })&&players[socket.id].Team!=players[id].Team){
+        })&&players[socket.id].Team!=players[id].Team&&projectiles[i].shootplayerid!=id){
             socket.emit('shieldhit',({i:i,id:id}))
         }}
 }}
@@ -564,7 +592,7 @@ for(const id in players){
             ){moving =false;players[socket.id].moving=false ; break}
         }
     if(moving){
-        players[socket.id].position.y-=5
+        players[socket.id].position.y-=playerspeed
         walksound.play()
         socket.emit('playerlocation',players[socket.id].position)
         socket.emit('playersprite','0')
@@ -589,7 +617,7 @@ for(const id in players){
             }
                 }
         if(moving){
-            players[socket.id].position.y+=5
+            players[socket.id].position.y+=playerspeed
             walksound.play()
             socket.emit('playerlocation',players[socket.id].position)
             socket.emit('playersprite','1')
@@ -613,7 +641,7 @@ for(const id in players){
             }
                 }
         if(moving){
-            players[socket.id].position.x-=5
+            players[socket.id].position.x-=playerspeed
             walksound.play()
             socket.emit('playerlocation',players[socket.id].position)
             socket.emit('playersprite','2')
@@ -638,7 +666,7 @@ for(const id in players){
                 }
         
         if(moving){
-            players[socket.id].position.x+=5
+            players[socket.id].position.x+=playerspeed
             walksound.play()
             socket.emit('playerlocation',players[socket.id].position)
             socket.emit('playersprite','3')
@@ -662,15 +690,28 @@ for(const id in players){
         document.querySelector(`div[data-id="${id}"]`).addEventListener('click',()=>{
             clickallowed=false
             if(id!=socket.id){
-                socket.emit('request',({id:socket.id,toid:id}))
+               if(Teamcreated){ socket.emit('request',({id:socket.id,toid:id}))}
+               else{
+                document.getElementById('request').innerHTML = "<div id=\"requestdiv\">============<br>Please create a Team before invite<br> <button onclick=\"Rejected()\" id=\"right\"style=\"padding-left:10px;padding-right:10px;font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; font-size:18px ;font-weight: bold;background-color:grey;border:4px solid blue;border-radius:5px;cursor:pointer\"> Ok</button> </div>";
+                document.getElementById('request').style="top:200px;right:0px;width:140px;height:100px;display:flex; position: absolute;border:2px solid blue;background-color:grey; padding-left :5px;border-radius:5px;font-size:20px;font-weight:bold"
+               }
             }
         })}
              
     
 
-
-
-
+if(keys.r.pressed&&entity>0){
+  
+    keys.r.pressed=false
+    entity-=1
+    socket.emit('speedupdate',({id:socket.id,speed:7.5}))
+    }
+if(keys.i.pressed&&invisnum>0){
+    keys.i.pressed=false
+    invisnum-=1
+    socket.emit('invis',socket.id)
+}
+console.log(players[socket.id].invis)
     //=======================================================//
     
 
@@ -687,6 +728,7 @@ window.addEventListener('keyup',checkkeyup)
 document.querySelector('#userform').addEventListener('submit',(e)=>{
     e.preventDefault()
     Health.xp=215
+    delete spawn
     Resistance.xp =215
     inv.Hotbarid= [40,30,21,15,10,6,10]
     document.querySelector('#userform').style.display = 'none'
