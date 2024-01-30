@@ -8,10 +8,10 @@ function rectangularcollision({rectangle1,rectangle2}){
 }
 function rectangularcollisionwithoutwalls({rectangle1,rectangle2}){
     return(
-        rectangle1.position.x + rectangle1.width>=rectangle2.position.x &&
-        rectangle1.position.x <= rectangle2.position.x + rectangle2.width &&
-        rectangle1.position.y+ rectangle1.height<=rectangle2.position.y + rectangle2.height && 
-        rectangle1.position.y + rectangle1.height>= rectangle2.position.y
+        parseInt(rectangle1.position.x) + rectangle1.width>=parseInt(rectangle2.position.x) &&
+        parseInt(rectangle1.position.x) <= parseInt(rectangle2.position.x) + rectangle2.width &&
+        parseInt(rectangle1.position.y)+ rectangle1.height<=parseInt(rectangle2.position.y )+ rectangle2.height && 
+        parseInt(rectangle1.position.y) + rectangle1.height>= parseInt(rectangle2.position.y)
     )
 }
 
@@ -33,6 +33,12 @@ function checkkeydown(e){
             break
         case 't':
             keys.t.pressed=true
+            break
+        case 'r':
+            keys.r.pressed=true
+            break
+        case 'i':
+            keys.i.pressed=true
             break
         case 'shift':
             keys.shift.pressed = true
@@ -65,6 +71,12 @@ function checkkeyup(e){
         case 't':
             keys.t.pressed=false
             break
+        case 'r':
+            keys.r.pressed=false
+            break
+        case 'i':
+            keys.i.pressed=false
+            break
         case 'shift':
             keys.shift.pressed = false
             break
@@ -75,6 +87,7 @@ function checkkeyup(e){
 
 
 var touchstartx,touchstarty
+let Teamcreated=false
 function touchstart(e){
     touchstartx = e.touches[0].clientX
     touchstarty = e.touches[0].clientY
@@ -127,7 +140,9 @@ function playExplosion(){
      }
      row++
     if (column<= 6 && row<=8){
-        requestAnimationFrame(playExplosion)
+        setTimeout(() => {
+            requestAnimationFrame(playExplosion);
+        }, 1000 / 120);
     }
 }
 function startExplosion(x,y) {
@@ -141,10 +156,11 @@ function r() {
   }
 
 function join(){
+    clickallowed=false
     socket.emit('updateTeam',{name:document.getElementById('Team').value,color: "rgb("+r()+","+r()+","+r()+")"})
     document.getElementById('input').innerHTML = "<div>Team : " + document.getElementById('Team').value + "</div>";
     document.getElementById('input').style= "border: 3px solid black;border-radius:5px;font-size:15px;font-weight:bold;padding-left:5px;padding-right:5px"
-
+    Teamcreated=true
 }
 function Accepted(){
     clickallowed=false
@@ -157,4 +173,36 @@ function Accepted(){
 function Rejected(){
     clickallowed=false
     document.getElementById('request').remove()
+}
+
+function drawpowers(entity,invisnum){
+c.beginPath();
+c.arc(200, 30, 25, 0, 2 * Math.PI, false);
+c.fillStyle = 'rgba(53,53,53,0.5)';
+c.fill()
+c.lineWidth = 4;
+c.strokeStyle = 'rgba(215,16,18,0.5)';
+c.stroke();
+c.drawImage(speedup,181,15,35,35)
+c.fillStyle= 'white'
+c.fillRect(170,8,12,12)
+c.fillStyle='black'
+c.fillText('R',176,19)
+c.fillStyle='red'
+c.fillText(`x${entity}`,220,60)
+
+c.beginPath();
+c.arc(260, 30, 25, 0, 2 * Math.PI, false);
+c.fillStyle = 'rgba(53,53,53,0.5)';
+c.fill()
+c.lineWidth = 4;
+c.strokeStyle = 'rgba(215,16,18,0.5)';
+c.stroke();
+c.drawImage(invis,242.5,15,35,35)
+c.fillStyle= 'white'
+c.fillRect(231,8,12,12)
+c.fillStyle='black'
+c.fillText('I',237,19)
+c.fillStyle='red'
+c.fillText(`x${invisnum}`,281,60)
 }
