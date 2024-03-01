@@ -14,6 +14,19 @@ function rectangularcollisionwithoutwalls({rectangle1,rectangle2}){
         parseInt(rectangle1.position.y) + rectangle1.height>= parseInt(rectangle2.position.y)
     )
 }
+function collisioncheck(){
+    let x1,x2,y1,y2
+       if( parseInt(rectangle1.position.x) + rectangle1.width>=parseInt(rectangle2.position.x) &&
+        parseInt(rectangle1.position.x) <= parseInt(rectangle2.position.x) + rectangle2.width &&
+        parseInt(rectangle1.position.y)+ rectangle1.height<=parseInt(rectangle2.position.y )+ rectangle2.height && 
+        parseInt(rectangle1.position.y) + rectangle1.height>= parseInt(rectangle2.position.y)){
+
+        }
+        // x1=rectangle1.position.x
+        // x2=rectangle2.position.x
+        // y1=rectangle1.position.y
+        // y2=rectangle2.position.y
+}
 
 function checkkeydown(e){
         // e= event
@@ -39,6 +52,9 @@ function checkkeydown(e){
             break
         case 'i':
             keys.i.pressed=true
+            break
+        case 'g':
+            keys.g.pressed=true
             break
         case 'shift':
             keys.shift.pressed = true
@@ -76,6 +92,9 @@ function checkkeyup(e){
             break
         case 'i':
             keys.i.pressed=false
+            break
+        case 'g':
+            keys.g.pressed=false
             break
         case 'shift':
             keys.shift.pressed = false
@@ -175,7 +194,7 @@ function Rejected(){
     document.getElementById('request').remove()
 }
 
-function drawpowers(entity,invisnum){
+function drawpowers(entity,invisnum,Timernum){
 c.beginPath();
 c.arc(200, 30, 25, 0, 2 * Math.PI, false);
 c.fillStyle = 'rgba(53,53,53,0.5)';
@@ -205,4 +224,19 @@ c.fillStyle='black'
 c.fillText('I',237,19)
 c.fillStyle='red'
 c.fillText(`x${invisnum}`,281,60)
+
+c.beginPath();
+c.arc(320, 30, 25, 0, 2 * Math.PI, false);
+c.fillStyle = 'rgba(53,53,53,0.5)';
+c.fill()
+c.lineWidth = 4;
+c.strokeStyle = 'rgba(215,16,18,0.5)';
+c.stroke();
+c.drawImage(Timer,303,14,35,35)
+c.fillStyle= 'white'
+c.fillRect(292,8,12,12)
+c.fillStyle='black'
+c.fillText('G',298,19)
+c.fillStyle='red'
+c.fillText(`x${Timernum}`,342,60)
 }
