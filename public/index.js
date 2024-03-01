@@ -37,6 +37,7 @@ const Bullets =new Image();Bullets.src='./img/Bullat.png'
 const playerShield =new Image();playerShield.src='./img/Resistance/shield.png'
 const Hotbar =new Image();Hotbar.src='./img/Hotbar.png'
 const Bulletsforhotbar =new Image();Bulletsforhotbar.src='./img/Bullet.png'
+const Timer  =new Image();Timer.src='./img/timer.png'
 
 const cursor = new Image(); cursor.src='./img/cursor.png'
 const bomb_animation = new Image(); bomb_animation.src='./img/explosion.png'
@@ -339,6 +340,7 @@ const keys = {
     t: {pressed: false},
     r: {pressed: false},
     i: {pressed: false},
+    g: {pressed: false},
     shift: {pressed: false}
 }
 
@@ -365,7 +367,7 @@ const doormap0 = []
 const door1=[]
 const door0=[]
 let spawn ={}
-let i=0,entity=5,invisnum=5
+let i=0,entity=5,invisnum=5,Timernum=5
 let spawnx,spawny,spawnid,Teamedit,clickallowed
 const FPS = 120
 
@@ -474,8 +476,7 @@ if(!players[socket.id]){return}
     // tocheck.forEach(boundary => {boundary.draw()}) 
     // doortocheck.forEach(boundary => {boundary.draw()}) //can be used to locate barrier blocks
 
-
-
+    
 for(const id in projectiles){
 for(let i=0 ;i <tocheck.length;i++){
     const boundary = tocheck[i]
@@ -513,7 +514,7 @@ for(const id in players){
 
 }
 
-drawpowers(entity,invisnum)
+drawpowers(entity,invisnum,Timernum)
 
 for(const id in players){
     let shields={
@@ -711,7 +712,11 @@ if(keys.i.pressed&&invisnum>0){
     invisnum-=1
     socket.emit('invis',socket.id)
 }
-console.log(players[socket.id].invis)
+if(keys.g.pressed&&Timernum>0){
+    keys.g.pressed=false
+    Timernum-=1
+    // socket.emit('invis',socket.id)
+}
     //=======================================================//
     
 
