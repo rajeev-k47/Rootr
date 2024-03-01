@@ -1,20 +1,18 @@
 const express = require('express')
-const { rmSync } = require('fs')
 const app = express()
-
 const http = require('http')
-const { send } = require('process')
 const server = http.createServer(app)
 const {Server} = require('socket.io')
 const io = new Server(server)
 
 const port = process.env.port ||3000
-
 app.use(express.static('public'))
 
 app.get('/', (req,res)=>{
     res.sendFile(__dirname + '/index.html')
 })
+
+const os = require('os');
 
 const players = {}
 const backendprojectiles = {}
@@ -23,7 +21,7 @@ let i=0
 let projectileID=0
 
 io.on('connection', (socket)=>{
-    console.log('A user connected ')
+    console.log('A user connected')
     socket.on('playerlocation',(position)=>{
         players[socket.id].xx = position.x 
         players[socket.id].yy = position.y 
@@ -136,6 +134,7 @@ io.on('connection', (socket)=>{
             io.emit('updatePlayer',players)
     })
     socket.on('speedupdate',({id,speed})=>{
+        if(!players[id]){return}
         players[id].speed=speed
         setTimeout(()=>{
             players[id].speed=5
@@ -251,7 +250,7 @@ setInterval(()=>{
         io.emit('delspawnbybackend',j)}}
     
     io.emit('spawnitems',spawn)
-    console.log('spawneditem')
+    // console.log('spawneditem')
 },7000)
 
 
