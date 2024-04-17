@@ -161,7 +161,7 @@ function playExplosion(){
     if (column<= 6 && row<=8){
         setTimeout(() => {
             requestAnimationFrame(playExplosion);
-        }, 1000 / 120);
+        }, 1000 / 80);
     }
 }
 function startExplosion(x,y) {
