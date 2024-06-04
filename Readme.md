@@ -6,6 +6,6 @@
    npm i
    node app.js
 
-   App will host on http://localhost:3000
+   App will host on respected ip:-/
 
 </pre>
