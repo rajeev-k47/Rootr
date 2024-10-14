@@ -17,12 +17,12 @@
 
   (TIPS):
   
-   Use w,a,s,d standard keys to move the player.
-   You can use left toolbar as weapon store and shoot them by clicking on the opponent.
-   Use the R,I keys on keyboard for increasing speed and Invisibility respectively.
-   Use the doors to navigate through the rooms of map .
-   Use shift key to Sheild up.
-   Use Healing pad for healing the health of player and Shield (Both have different health and different healing pad).
+   Use w,a,s,d standard keys to move the player. <br>
+   You can use left toolbar as weapon store and shoot them by clicking on the opponent.<br>
+   Use the R,I keys on keyboard for increasing speed and Invisibility respectively.<br>
+   Use the doors to navigate through the rooms of map .<br>
+   Use shift key to Sheild up.<br>
+   Use Healing pad for healing the health of player and Shield (Both have different health and different healing pad).<br>
    Use team feature on top right corner to make a new team and invite members using clicking on their username .
    
 
